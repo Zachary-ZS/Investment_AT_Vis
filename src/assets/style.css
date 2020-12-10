@@ -1,0 +1,116 @@
+html {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    background: white;
+    display: grid;
+    grid-template-rows: 80px 640px 500px;
+    grid-template-columns: 50% 50%;
+    grid-template-areas: "top top""left right""bottom bottom";
+}
+
+#top_panel {
+    width: 100%;
+    height: 100%;
+    background: lightblue;
+    grid-area: top;
+    box-shadow: 0 0 10px #888888;
+    /* margin-bottom: 20px; */
+}
+
+#top_panel select {
+    border-radius: 10px;
+}
+
+.text {
+    text-align: center;
+    font: Khand-Regular;
+    font-size: 16px;
+    padding-top: 0.5rem;
+}
+
+#bottom_panel {
+    margin-top: 10px;
+    padding: 20px;
+    width: auto;
+    height: 100%;
+    background: rgb(215, 225, 228);
+    grid-area: bottom;
+    box-shadow: -5px 0px 10px #888888;
+}
+
+#bottom_panel #bottom_note {
+    padding: 10px;
+    padding-top: 60px;
+    width: 300px;
+    float: right;
+    font-family: 'Microsoft Yahei';
+}
+
+#left_panel {
+    margin-top: 10px;
+    width: 100%;
+    height: 100%;
+    max-height: 800px;
+    /*background: #EBEBEB;*/
+    background: white;
+    grid-area: left;
+}
+
+#right_panel {
+    margin-top: 10px;
+    width: 100%;
+    height: 100%;
+    /* text-align: center; */
+    /*background: #EBEBEB;*/
+    background: white;
+    grid-area: right;
+    /* box-sizing: border-box; */
+    /* border: solid 1px grey; */
+}
+
+.tooltip {
+    position: absolute;
+    text-align: center;
+    /* display: inline-flex; */
+    background-color: rgba(250, 250, 250, 1);
+    border: 1px solid rgb(200, 200, 200);
+    border-radius: 5px;
+    font-size: 0.8rem;
+    padding: 4px;
+    color: black;
+    z-index: 3;
+    visibility: hidden;
+    opacity: 0.8;
+}
+
+#right_panel .tooltip {
+    float: right;
+    margin-top: 30px;
+    margin-left: 120px;
+    width: 100px;
+}
+
+#left_panel .tooltip {
+    width: 200px;
+}
+
+.hidden {
+    /*fill-opacity: 0.3;*/
+}
+
+.active {
+    /*opacity: 1;*/
+}
