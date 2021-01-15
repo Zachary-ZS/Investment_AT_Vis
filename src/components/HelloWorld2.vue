@@ -1,5 +1,9 @@
 <template>
-  <div class="hello">
+  <el-container class="mainview">
+    <el-header>
+      <svg-icon name="03-企业服务" color="red" width="24"></svg-icon>
+    </el-header>
+    <el-main>
     <h1>{{ msg }}</h1>
     <h2>Essential Links</h2>
     <ul>
@@ -81,16 +85,24 @@
       </li>
     </ul>
     <el-button>{{ this.mail }}</el-button>
-    <scatter />
-  </div>
+    </el-main>
+    <el-main>
+      <industry-analysis />
+    </el-main>
+    <el-main>
+      <scatter />
+    </el-main>
+  </el-container>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 import scatter from './scatterplot'
+import IndustryAnalysis from './IndustryAnalysis'
+import '@/assets/svg/'
 export default {
   name: 'HelloWorld',
-  components: {scatter},
+  components: {scatter, IndustryAnalysis},
   data () {
     return {
       msg: 'Welcome to Your Vue.js App',
@@ -109,6 +121,15 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.el-header {
+  position: -webkit-sticky;
+  position: sticky;
+  background-color: aliceblue;
+  top: 0;
+  box-shadow: 0px 5px 10px -8px #000;
+  z-index: 3000;
+}
+
 h1, h2 {
   font-weight: normal;
 }

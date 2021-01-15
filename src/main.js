@@ -5,11 +5,18 @@ import App from './App'
 // store - vuex
 import store from './store'
 import router from './router'
+
+// svg-icon
+import SvgIcon from 'vue-svgicon'
+Vue.use(SvgIcon, {
+    tagName: 'svg-icon'
+});
+
 // Element-ui
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 Vue.use(ElementUI, {
-    size: 'medium'
+    size: 'mini'
 })
 
 

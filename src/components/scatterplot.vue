@@ -1,9 +1,9 @@
 <template>
-  <el-main>
+  <div>
       <div  id="scatter">
       <div class='tooltip'></div>
       </div>
-  </el-main>
+  </div>
 </template>
 
 <script>
@@ -32,7 +32,6 @@ export default {
         return typecontainer[b] - typecontainer[a];
       });
       res = res.slice(0, 9);
-      console.log(res);
       var idx = res.indexOf("others");
       if (idx == -1) {
         res.push("others");
@@ -53,14 +52,12 @@ export default {
       let category = 'Country'
       // alert(category)
       var typeidx = this.most_type(data, category);
-      console.log(typeidx);
       let padding = {
         left: 0.1 * svgWidth,
         right: 0.1 * svgWidth,
         top: 0.05 * svgHeight,
         bottom: 0.05 * svgHeight,
       };
-      console.log(padding)
       let svg = div
         .append("svg")
         .attr('width', svgWidth)
@@ -160,7 +157,7 @@ export default {
         .attr("opacity", 1)
         .on("mouseover", function (e, d) {
           d3.select(this).attr("stroke", "#ff6a33");
-          console.log(d)
+          // console.log(d)
           let rank = d["Rank"];
           let name = d["Name"];
           let cty = d["Country"];
@@ -203,10 +200,10 @@ export default {
           let tooltip = div.select(".tooltip");
           tooltip
             .html(content)
-            .style("left", e.screenX + 5 + "px")
-            .style("top", e.screenY + 100+  "px")
+            .style("left", e.layerX + 450 + "px")
+            .style("top", e.layerY + 0+  "px")
             .style("visibility", "visible");
-        console.log(e)
+        // console.log(e)
 
           // linkingHover('.rect', ['.' + d['district'], d['popularity']]);
         })
@@ -250,7 +247,6 @@ export default {
       let svg = div.select("svg");
       let category = $("#select_category").val();
       var typeindex = this.most_type(data, category);
-      console.log(typeindex);
 
       svg.selectAll("circle").attr("fill", (d) => {
         return typeindex.indexOf(d[category]) == -1
@@ -260,11 +256,10 @@ export default {
     },
   },
   created() {
-    console.log(this.mail);
+    
     d3.csv("@/../static/final.csv", (d) => {
       return d;
     }).then((data) => {
-        console.log(data)
       this.drawScatterplot(data);
     });
   },
@@ -275,5 +270,11 @@ export default {
 <style scoped>
 #scatter {
     height: 600px;
+}
+.tooltip {
+    position: absolute;
+}
+div {
+    position: relative;
 }
 </style>
