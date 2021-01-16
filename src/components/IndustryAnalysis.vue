@@ -1,11 +1,21 @@
 <template>
+<div style="text-align:center;">
+  <div>
+    <el-radio-group v-model="orderby" @change="ind_order=orderby==-1?null:orders[orderby]; get_ordered_industry();drawPoints(0);drawPoints(1);">
+      <el-radio-button label=0>腾讯投资公司数</el-radio-button>
+      <el-radio-button label=1>腾讯投资额</el-radio-button>
+      <el-radio-button label=-1>默认顺序</el-radio-button>
+      <el-radio-button label=2>阿里投资公司数</el-radio-button>
+      <el-radio-button label=3>阿里投资额</el-radio-button>
+    </el-radio-group>
+  </div>
   <div id="analysis">
       <div id="scatter_t">
         <div class="tooltip"></div>
       </div>
-      <div id="industry_note">
-          <p v-for="item in this.get_ordered_industry()" :key="item.key">{{item}}</p>
-      </div>
+      <transition-group tag="div" id="industry_note">
+          <p v-for="item in ordered_ind" :key="item">{{item}}</p>
+      </transition-group>
       <div id="scatter_a">
         <div class="tooltip"></div>
       </div>
@@ -16,7 +26,7 @@
           <el-radio-button label="all">全部</el-radio-button>
           <el-radio-button label="abroad">国外</el-radio-button>
         </el-radio-group>
-        <p style="margin:0px;font-size:6px;" v-for="(item,key) in this.types" :key="key">
+        <p style="margin:0px;font-size:6px;" v-for="(item,key) in types" :key="key">
           <span :style="`border:1px solid #000;background-color:${color_list_t[key]}`">&emsp;</span><span style="display:inline-block;width:70px">{{item}}</span>
           <span :style="`border:1px solid #000;background-color:${color_list_a[key]}`">&emsp;</span>
         </p>
@@ -25,6 +35,7 @@
       </div>
       <div id="stack_a"></div>
   </div>
+</div>
 </template>
 
 <script>
@@ -44,6 +55,14 @@ export default {
       industries: ["文娱传媒", "游戏", "企业服务", "金融/支付", "社交社区", "电子商务", "医疗健康/生物医药", "教育培训", "直播/视频", "汽车交通", "生活服务", "工具软件", "人工智能", "电信/通信", "旅游/OTA", "科创/技术研发", "食品/商贸零售", "硬件/生产制造", "物流运输", "房产家居", "AR/VR", "其他"],
       types: ["100亿及以上", "10-100亿", "1-10亿", "1000万-1亿", "1000万以下"],
       ind_order: null,
+      ordered_ind: [],
+      orderby: -1,
+      orders: [
+        [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,0],
+        [1,0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21],
+        [1,2,3,4,0,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21],
+        [1,2,0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]        
+      ],
       data_a: [],
       data_t: [],
       amount_a: [],
@@ -140,7 +159,11 @@ export default {
         .domain(this.get_min_max(data, "num"))
         .range([3, 14])
 
-      svg.selectAll("circle").remove()
+      svg.selectAll("circle")
+        .transition()
+        .duration(500)
+        .attr("r", 0)
+        .remove()
 
       let _this = this
       svg.append("g")
@@ -166,15 +189,14 @@ export default {
         .attr("cy", (d,i)=>{
           return (this.svgHeight/this.industries.length-4)*d["industry"]+22;
         })
-        .attr("r", d=>{
-          return sizescale(d["num"])
-        })
+        
         .attr("stroke", "black")
         .attr("stroke-width", 1)
         .attr("opacity", 1)
         .on("mouseover", function(e,d) {
+          let rangedict = {"all":"", "china":"<b>国内</b>的", "abroad":"<b>国外</b>的"}
           d3.select(this).attr("stroke-width", 1.8)
-          let instruction1 = `<p><b>${d["year"]}年</b>，<b>${idx?"阿里巴巴":"腾讯"}</b>在<b>${_this.industries[d["industry"]]}</b>行业投资了<b>${d["num"]}家</b>公司，`
+          let instruction1 = `<p><b>${d["year"]}年</b>，<b>${idx?"阿里巴巴":"腾讯"}</b>在${rangedict[_this.range]}<b>${_this.industries[d["industry"]]}</b>行业投资了<b>${d["num"]}家</b>公司，`
           let instruction2 = d["avg"]?`平均投资金额为<b>${Math.round(d["avg"]/1e5)/1e3}亿</b>RMB</p>`:"投资金额未披露</p>"
 
           let svgid=(idx? "#scatter_a":"#scatter_t")
@@ -183,7 +205,7 @@ export default {
           
           tooltip
             .html(instruction1+instruction2)
-            .style("left", e.layerX + 10+ (1-idx)*50 + "px")
+            .style("left", e.layerX + 10+ (1-idx)*10 + "px")
             .style("top", e.layerY + 20 +  "px")
             .style("visibility", "visible");
         })
@@ -194,17 +216,27 @@ export default {
           let tooltip = div.select(".tooltip")
           tooltip.style("visibility", "hidden")
         })
+        
+        .attr("r", 0)
+        .transition()
+        .duration(500)
+        .attr("r", d=>{
+          return sizescale(d["num"])
+        })
 
 
     },
     get_ordered_industry() {
-      if (this.ind_order == null)
-        return this.industries;
-      var res = []
+      this.ordered_ind.splice(0, this.ordered_ind.length)
+      if (this.ind_order == null) {
+        this.ordered_ind = this.industries.slice();
+        return;
+      }
+      // var res = []
       this.ind_order.forEach(idx=>{
-        res.push(this.industries[idx])
+        this.ordered_ind.push(this.industries[idx])
       })
-      return res;
+      // return res;
     },
     drawStack(idx) {
       let data = idx?this.amount_a:this.amount_t;
@@ -363,6 +395,7 @@ export default {
   },
   created() {
     // console.log(this.mail);
+    this.get_ordered_industry()
     d3.csv("../static/industry_year_all.csv", (d) => {
       return d;
     }).then((data) => {
@@ -435,5 +468,25 @@ export default {
 }
 #scatter_t,#scatter_a {
     position: relative;
+}
+
+.v-enter,
+.v-leave-to {
+  opacity: 0;
+  transform: translateY(80px);
+}
+
+.v-enter-active,
+.v-leave-active {
+  transition: all 0.6s ease;
+}
+
+/*v-move 和 v-leave-active 配合使用，能够实现列表后续的元素，渐渐地漂上来的效果 */
+
+.v-move {
+  transition: all 0.6s ease;
+}
+.v-leave-active {
+  position: absolute;
 }
 </style>

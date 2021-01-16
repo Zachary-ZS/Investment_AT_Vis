@@ -2,7 +2,18 @@
   <el-container id="mainview">
     <div id="header_header" />
     <el-header>
-      <svg-icon name="ind_2" color="red" width="24"></svg-icon>
+    <!-- <span id="web_title">Tencent VS Alibaba</span> -->
+      <!-- <svg-icon name="ind_2" color="red" width="24"></svg-icon> -->
+      <el-menu background-color="#dbebf8" class="el-menu-demo" mode="horizontal" style="height: 55px; display:inline-block;">
+        <el-menu-item index="0" id="web_title">Tencent VS Alibaba
+        </el-menu-item>
+        <el-menu-item index="1"><a href="#analysis">行业数据对比</a>
+        </el-menu-item>
+        <el-menu-item index="2"><a href="#MapGrid">海外投资版图</a>
+        </el-menu-item>
+        <el-menu-item index="3"><a href="#slider">国内行业扩张</a>
+        </el-menu-item>
+      </el-menu>    
     </el-header>
     <el-main>
       <h1> 腾讯投资版图概览 </h1>
@@ -62,9 +73,10 @@
     </el-main>
     <el-main>
       <invest-map />
-    </el-main><el-main>
-      <scatter />
     </el-main>
+    <!-- <el-main>
+      <scatter />
+    </el-main> -->
   </el-container>
 </template>
 
@@ -103,11 +115,16 @@ export default {
 .el-header {
   position: -webkit-sticky;
   position: sticky;
+  /* border-bottom: 2px solid rgb(219, 235, 248); */
   background-color:rgb(219, 235, 248);
   margin-top: 8px solid rgb(219, 235, 248);
   top: 0;
   box-shadow: 0px 5px 10px -8px #000;
   z-index: 3000;
+  vertical-align: top;
+}
+/deep/.el-header .el-menu #web_title:hover {
+  background-color: white;
 }
 .el-main {
   position: sticky;
@@ -134,6 +151,7 @@ li {
 }
 a {
   color: #42b983;
+  text-decoration: none;
 }
 </style>
 
