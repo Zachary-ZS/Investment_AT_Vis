@@ -1,18 +1,27 @@
 <template>
   <div id="analysis">
       <div id="scatter_t">
-
+        <div class="tooltip"></div>
       </div>
       <div id="industry_note">
           <p v-for="item in this.get_ordered_industry()" :key="item.key">{{item}}</p>
       </div>
       <div id="scatter_a">
+        <div class="tooltip"></div>
       </div>
       <div id="stack_t"></div>
       <div id="note_null">
-        <el-button round @click="flushrange('china')">国内</el-button>
-        <el-button round @click="flushrange('abroad')">国外</el-button>
-        <el-button round @click="flushrange('all')">全部</el-button>
+        <el-radio-group style="margin-bottom:10px" v-model="range" @change="flushrange()">
+          <el-radio-button label="china">国内</el-radio-button>
+          <el-radio-button label="all">全部</el-radio-button>
+          <el-radio-button label="abroad">国外</el-radio-button>
+        </el-radio-group>
+        <p style="margin:0px;font-size:6px;" v-for="(item,key) in this.types" :key="key">
+          <span :style="`border:1px solid #000;background-color:${color_list_t[key]}`">&emsp;</span><span style="display:inline-block;width:70px">{{item}}</span>
+          <span :style="`border:1px solid #000;background-color:${color_list_a[key]}`">&emsp;</span>
+        </p>
+        
+        
       </div>
       <div id="stack_a"></div>
   </div>
@@ -29,16 +38,18 @@ export default {
     return {
       svg: [null, null, null, null],
       svgWidth: 600,
-      svgHeight: 600,
+      svgHeight: 560,
       range: "all",
       years: ["before 2008", "2008", "2009", "2010", "2011", '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020'],
       industries: ["文娱传媒", "游戏", "企业服务", "金融/支付", "社交社区", "电子商务", "医疗健康/生物医药", "教育培训", "直播/视频", "汽车交通", "生活服务", "工具软件", "人工智能", "电信/通信", "旅游/OTA", "科创/技术研发", "食品/商贸零售", "硬件/生产制造", "物流运输", "房产家居", "AR/VR", "其他"],
-      types: ["100亿及以上", "10-100亿（不含）", "1-10亿（不含）及以上", "1000万-1亿（不含）", "1000万以下"],
+      types: ["100亿及以上", "10-100亿", "1-10亿", "1000万-1亿", "1000万以下"],
       ind_order: null,
       data_a: [],
       data_t: [],
       amount_a: [],
-      amount_t: []
+      amount_t: [],
+      color_list_a: [],
+      color_list_t: []
       
     };
   },
@@ -131,6 +142,7 @@ export default {
 
       svg.selectAll("circle").remove()
 
+      let _this = this
       svg.append("g")
         .selectAll("circle")
         .data(data)
@@ -159,6 +171,29 @@ export default {
         })
         .attr("stroke", "black")
         .attr("stroke-width", 1)
+        .attr("opacity", 1)
+        .on("mouseover", function(e,d) {
+          d3.select(this).attr("stroke-width", 1.8)
+          let instruction1 = `<p><b>${d["year"]}年</b>，<b>${idx?"阿里巴巴":"腾讯"}</b>在<b>${_this.industries[d["industry"]]}</b>行业投资了<b>${d["num"]}家</b>公司，`
+          let instruction2 = d["avg"]?`平均投资金额为<b>${Math.round(d["avg"]/1e5)/1e3}亿</b>RMB</p>`:"投资金额未披露</p>"
+
+          let svgid=(idx? "#scatter_a":"#scatter_t")
+          let div = d3.select(svgid)
+          let tooltip = div.select(".tooltip")
+          
+          tooltip
+            .html(instruction1+instruction2)
+            .style("left", e.layerX + 10+ (1-idx)*50 + "px")
+            .style("top", e.layerY + 20 +  "px")
+            .style("visibility", "visible");
+        })
+        .on("mouseout", function(d) {
+          d3.select(this).attr("stroke-width", 1)
+          let svgid=(idx? "#scatter_a":"#scatter_t")
+          let div = d3.select(svgid)
+          let tooltip = div.select(".tooltip")
+          tooltip.style("visibility", "hidden")
+        })
 
 
     },
@@ -176,8 +211,13 @@ export default {
       var svgid=(idx? "#stack_a":"#stack_t")
       let div = d3.select(svgid);
       let svgWidth = 600;
-      let svgHeight = 75;
-      console.log(data)
+      let svgHeight = 120;
+      // console.log(data)
+      let cl = idx?this.color_list_a:this.color_list_t;
+      cl.splice(0, cl.length)
+      this.types.forEach(d=>{
+        cl.push(this.get_type_color(d, idx))
+      })
       
       if (this.svg[idx+2] == null) {
         this.svg[idx+2]=div
@@ -224,9 +264,9 @@ export default {
       let amount=0
       switch (type) {
         case "1000万以下": amount = 10000000; break;
-        case "1000万-1亿（不含）": amount = 50000000; break;
-        case "1-10亿（不含）及以上": amount = 500000000; break;
-        case "10-100亿（不含）": amount = 5000000000; break;
+        case "1000万-1亿": amount = 50000000; break;
+        case "1-10亿": amount = 400000000; break;
+        case "10-100亿": amount = 3000000000; break;
         case "100亿及以上": amount = 20000000000;
       }
       let vl = colorscale(amount)
@@ -234,18 +274,18 @@ export default {
         return d3.rgb(255,vl,255);
       return d3.rgb(vl,vl,255);
     },
-    flushrange(range) {
-      if (range == this.range) 
-        return;
-      this.range = range;
-      d3.csv(`../static/industry_year_${range}.csv`, (d) => {
+    flushrange() {
+      // if (range == this.range) 
+      //   return;
+      // this.range = range;
+      d3.csv(`../static/industry_year_${this.range}.csv`, (d) => {
         return d;
       }).then((data) => {
         this.data_processing(data);
         this.drawPoints(0);
         this.drawPoints(1);
       });
-      d3.csv(`../static/amount_year_${range}.csv`, (d) => {
+      d3.csv(`../static/amount_year_${this.range}.csv`, (d) => {
         return d;
       }).then((data) => {
         this.amount_processing(data);
@@ -289,18 +329,18 @@ export default {
           this.amount_t.push({
             "year": parseInt(d["年份"]),
             "1000万以下": 0||parseInt(d["1000万以下"]),
-            "1000万-1亿（不含）": 0||parseInt(d["1000万-1亿（不含）"]),
-            "1-10亿（不含）及以上": 0||parseInt(d["1-10亿（不含）及以上"]),
-            "10-100亿（不含）": 0||parseInt(d["10-100亿（不含）"]),
+            "1000万-1亿": 0||parseInt(d["1000万-1亿"]),
+            "1-10亿": 0||parseInt(d["1-10亿"]),
+            "10-100亿": 0||parseInt(d["10-100亿"]),
             "100亿及以上": 0||parseInt(d["100亿及以上"])
           })
         } else {
           this.amount_a.push({
             "year": parseInt(d["年份"]),
             "1000万以下": 0||parseInt(d["1000万以下"]),
-            "1000万-1亿（不含）": 0||parseInt(d["1000万-1亿（不含）"]),
-            "1-10亿（不含）及以上": 0||parseInt(d["1-10亿（不含）及以上"]),
-            "10-100亿（不含）": 0||parseInt(d["10-100亿（不含）"]),
+            "1000万-1亿": 0||parseInt(d["1000万-1亿"]),
+            "1-10亿": 0||parseInt(d["1-10亿"]),
+            "10-100亿": 0||parseInt(d["10-100亿"]),
             "100亿及以上": 0||parseInt(d["100亿及以上"])
           })
         }
@@ -345,10 +385,11 @@ export default {
 <style scoped>
 #analysis {
   display: inline-grid;
-  height: 840px;
-  width: 95%;
-  grid-template-columns: 46% 8% 46%;
-  grid-template-rows: 550px 140px;
+  height: 680px;
+  width: 100%;
+  text-align: center;
+  grid-template-columns: 45% 9% 46%;
+  grid-template-rows: 510px 140px;
 }
 .axis path {
   visibility: hidden;
@@ -367,10 +408,10 @@ export default {
   width: auto;
   /* height: 100%; */
   font-size: 12px;
-  padding-top: 16px;
+  padding-top: 17px;
 }
 #industry_note p {
-  margin: 7.5px;
+  margin: 5.6px;
   overflow: hidden;
   /* text-overflow:ellipsis; */
   white-space: nowrap;
@@ -383,18 +424,16 @@ export default {
 #stack_a {
   text-align: left;
 }
-
-.el-button {
-  display: inline-block;
-  margin: 0px;
-  padding: 8px;
-  font-size: 12px;
+/deep/.el-radio-group .el-radio-button .el-radio-button__inner {
+  padding: 6px;
 }
 
-/* .tooltip {
+.tooltip {
     position: absolute;
+    width: 200px;
+    padding: 16px;
 }
-div {
+#scatter_t,#scatter_a {
     position: relative;
-} */
+}
 </style>
