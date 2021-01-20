@@ -4,15 +4,18 @@
     <div id="mapTiming">
       <h1>腾讯与阿里海外投资版图对比</h1>
       <h2>{{year}} 年 {{month}} 月</h2>
-      <el-button mini round @click="timeSetTicking()">TimeTicking</el-button>
+      <!-- <el-button mini round @click="timeSetTicking('reset', goon=false)">TimeTicking</el-button> -->
     </div>
     <div id="slider">
-      <el-slider v-model="moon" :format-tooltip="getYM" :min='1' :max='156' :marks="slider_marks" @change="timeSetTicking('before')"></el-slider>
+      <el-slider v-model="moon" :format-tooltip="getYM" :min='1' :max='156' :marks="slider_marks" @change="timeSetTicking('before', goon=false)" style="width:70%;display:inline-block;margin-right:30px"></el-slider>
+      <el-button mini round @click="timeSetTicking('before', true)">go on</el-button>
+      <el-button mini round @click="pauses()">pause</el-button>
+      <el-button mini round @click="timeSetTicking('reset', goon=false)">reset</el-button>
     </div>
     <div id="invest_animation">
       <div class="animate" id="animate_t">
         <img src="@static/icon/company/tencent.png" :height="`${height_t}px`"/>
-        <svg-icon v-for="i in Array(22).fill().map((_,i)=>i+1)" :key="i" :name="`ind_${i}`" :width="'30'" ></svg-icon>
+        <!-- <svg-icon v-for="i in Array(22).fill().map((_,i)=>i+1)" :key="i" :name="`ind_${i}`" :width="'30'" ></svg-icon> -->
       </div>
       <div class="animate" id="animate_a">
         <img src="@static/icon/company/alibaba.png" :height="`${height_a}px`"/>
@@ -36,6 +39,7 @@ export default {
       svgWidth: 960,
       svgHeight: 420,
       svg: null,
+      svghome: [null, null],
       mapdata: null,
       data: null,
       iconsize: 10,
@@ -55,13 +59,17 @@ export default {
         145: "2020年",
         156: "2020/12"
       },
+      industries: ["文娱传媒", "游戏", "企业服务", "金融/支付", "社交社区", "电子商务", "医疗健康/生物医药", "教育培训", "直播/视频", "汽车交通", "生活服务", "工具软件", "人工智能", "电信/通信", "旅游/OTA", "科创/技术研发", "食品/商贸零售", "硬件/生产制造", "物流运输", "房产家居", "AR/VR", "其他"],
       country_inds: null,
+      data_a: [],
+      data_t: [],
 
       height_a: 60,
       height_t: 60,
       max_height: 400,
       min_height: 60,
       val: [,],
+      timeout: null
       // logscale : d3.scaleLog()
       // .domain([150, 70000])
       // .range([this.min_height, this.max_height]),
@@ -117,8 +125,15 @@ export default {
       let k = (this.max_height-this.min_height)/(Math.log10(70000) - Math.log10(150))
       return k*(Math.log10(a)-Math.log10(150))+this.min_height
     },
+    logscale2(a) {
+      let k = (60-35)/(Math.sqrt(10) - Math.sqrt(1))
+      return k*(Math.sqrt(a)-Math.sqrt(1))+35
+    },
+    pauses() {
+      clearTimeout(this.timeout)
+    },
     
-    timeSetTicking(mode) {
+    timeSetTicking(mode, goon) {
       mode = typeof(mode) == 'undefined' ? "reset" : mode;
       console.log(mode)
       if (mode=="reset") {
@@ -134,7 +149,26 @@ export default {
             return "#e0e0e0";
           })
       this.country_inds = [[],[]]
-      console.log(this.country_inds)
+      this.svghome[0].select("#indicon").selectAll("path").attr("fill", function() {
+              let th = d3.select(this).attr("colorbackup")
+              let r = parseInt(th.slice(1,3), 16)
+              let g = parseInt(th.slice(3,5), 16)
+              let b = parseInt(th.slice(5,7), 16)
+              if (r>215 && g>215 && b>215)
+                return th;
+              return "#c0c0c0";
+            })
+      this.svghome[1].select("#indicon").selectAll("path").attr("fill", function() {
+              let th = d3.select(this).attr("colorbackup")
+              let r = parseInt(th.slice(1,3), 16)
+              let g = parseInt(th.slice(3,5), 16)
+              let b = parseInt(th.slice(5,7), 16)
+              if (r>215 && g>215 && b>215)
+                return th;
+              return "#c0c0c0";
+            })
+
+      // console.log(this.country_inds)
       for (var i=0;i<900;i++) {
         this.country_inds[0][i] = []
         this.country_inds[1][i] = []
@@ -144,11 +178,16 @@ export default {
         return d;
       }).then((data) => {
         this.data = data
-        if (mode!="reset") {
-          this.drawInvest("before")
-        }
-        this.timeTicking()
+        
+        this.drawInvest("before")
+        this.drawHome("before")
+        
+        if (goon)
+          this.timeTicking()
       })   
+
+    },
+    timeset(mode) {
 
     },
     timeTicking() {
@@ -246,6 +285,124 @@ export default {
       mode = typeof(mode) == 'undefined' ? "now" : mode;
       this.height_a = this.logscale(parseFloat(this.val[1][this.moon-1].marketvalue))
       this.height_t = this.logscale(parseFloat(this.val[0][this.moon-1].marketvalue))
+      this.drawByCompany(0, mode)
+      this.drawByCompany(1, mode)
+      
+
+    },
+    drawByCompany(idx, mode) {
+      let data = (idx==1)?this.data_a:this.data_t
+      let svgid = (idx==1)?"#animate_a":"#animate_t"
+      data.forEach(d=>{
+        if ((
+          mode == "now" && d["year"] == this.year && d["month"] == this.month
+        )||(
+          mode == "before" && (d["year"]<this.year || (d["year"]==this.year && d["month"]<=this.month))
+        )) {
+          let g = d3.select(svgid).select("#indicon")
+          let svgnode = g.select(`.ind_${d["industry"]}`)
+          let tmpsize = this.logscale2(d["num"])
+          console.log(tmpsize)
+          svgnode
+            .transition()
+            .duration(400)
+            .attr("width", tmpsize)
+            .attr("height", tmpsize)
+            .transition()
+            .duration(400)
+            .attr("width", 30)
+            .attr("height", 30)
+          svgnode.selectAll("path")
+            .transition()
+            .duration(400)
+            .attr("fill", function() {
+              return d3.select(this).attr("colorbackup")
+            })
+          // svgnode
+
+
+        }
+      })
+
+    },
+    drawHomeGraph(idx) {
+      let svgid = (idx==0)?"#animate_t":"#animate_a"
+      let div = d3.select(svgid)
+      let svgWidth = 700
+      let svgHeight = 450
+
+      this.svghome[idx] = div.append("svg")
+        .attr('width', svgWidth)
+        .attr('height', svgHeight)
+        .attr("preserveAspectRatio", "none")
+      let svg = this.svghome[idx]
+
+      let y = d3
+        .scaleLog()
+        .domain([150,70000])
+        .range([this.max_height,this.min_height])
+      let axis_y = d3
+        .axisLeft()
+        .scale(y)
+        // .ticks(3)
+        .tickFormat(d=> {
+          let tmp = [200, 500, 1000, 2000, 4000, 10000, 20000, 40000, 70000]
+          if (tmp.indexOf(d)!=-1)
+            return `${d}亿HK\$`
+          return null
+        })
+      let axis = svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(350,0)")
+        .call(axis_y)
+      axis.selectAll("line").remove()
+      axis.selectAll("path")
+        .attr("stroke", "#e0e0e0")
+      axis.selectAll("text")
+        .attr("fill", "gray")
+
+      let g = svg.append("g").attr("id", "indicon")
+      let cx = [0, 120,120,120,120,120,120,570,570,570,570,570,570,80,80,80,80,80,610,610,610,610,610]
+      let cy = [0, 410,370,330,290,250,210, 410,370,330,290,250,210, 410,370,330,290,250, 410,370,330,290,250]
+
+      for (var i=1; i<=22; i++) {
+        let _i = i
+        d3.xml(`../static/icon/svg/ind_${i}.svg`, d => {
+          return d;
+        }).then(data => {
+          var svgNode = data.getElementsByTagName("svg")[0];
+          g.node().appendChild(svgNode)
+
+          let newsvg = g.selectAll("svg")
+            .filter((d,i)=>{
+              return i == g.selectAll("svg").size()-1
+            })
+            .attr("width", 30)
+            .attr("height", 30)
+            .attr("x", cx[_i])
+            .attr("y", cy[_i])
+            .attr("class", `ind_${_i}`)
+          newsvg.append("title")
+            .text(this.industries[_i-1])
+          newsvg.selectAll("path")
+            .attr("colorbackup", function() {
+              return d3.select(this).attr("fill")
+            })
+          newsvg.selectAll("path")
+            .attr("fill", function() {
+              let th = d3.select(this).attr("fill")
+              let r = parseInt(th.slice(1,3), 16)
+              let g = parseInt(th.slice(3,5), 16)
+              let b = parseInt(th.slice(5,7), 16)
+              if (r>215 && g>215 && b>215)
+                return th;
+              return "#c0c0c0";
+            })
+          
+
+        })
+      }
+
     },
     // Slider Functions
     getYM(moon) {
@@ -255,7 +412,29 @@ export default {
       this.year = year
       this.month = month
       return `${year}年${month}月`
-    }
+    },
+    data_processing(data) {
+      // let data_t = [], data_a
+      this.data_t.splice(0, this.data_t.length)
+      this.data_a.splice(0, this.data_a.length)
+      data.forEach(d=>{
+        if (d["投资方"]=="腾讯") {
+          this.data_t.push({
+            "year": parseInt(d["year"]<2008?2007:d["year"]),
+            "industry": parseInt(d["industry"])-1,
+            "num": parseInt(d["num"]),
+            "month": parseInt(d["month"])
+          })
+        } else {
+          this.data_a.push({
+            "year": parseInt(d["year"]<2008?2007:d["year"]),
+            "industry": parseInt(d["industry"])-1,
+            "num": parseInt(d["num"]),
+            "month": parseInt(d["month"])
+          })
+        }
+      })
+    },
   },
   created() {
     d3.json('../static/countries-50m.json', (d) => {
@@ -277,6 +456,14 @@ export default {
         // console.log(parseFloat(this.val[1][0].marketvalue))
         this.height_a = this.logscale(parseFloat(this.val[1][0].marketvalue))
         this.height_t = this.logscale(parseFloat(this.val[0][0].marketvalue))
+        d3.csv("../static/industry_month_china.csv", d=>{
+          return d;
+        }).then(data => {
+          this.data_processing(data)
+          this.drawHomeGraph(0)
+          this.drawHomeGraph(1)
+          console.log("tmp")
+        })
       })
     })
   },
@@ -286,7 +473,7 @@ export default {
 <style scoped>
 #MapGrid {
   display: inline-grid;
-  height: 930px;
+  height: 950px;
   width: 100%;
   text-align: center;
   grid-template-columns: 1000px 400px;
@@ -296,7 +483,8 @@ export default {
   grid-column-start: 1;
   grid-column-end: 3;
   grid-row-start: 2;
-  background-color: antiquewhite;
+  background-color: rgba(198, 232, 235, 0.595);
+  border-radius: 5px;
   padding-left: 10%;
   padding-right: 5%;
 }
@@ -304,7 +492,7 @@ export default {
   grid-column-start: 1;
   grid-column-end: 3;
   grid-row-start: 3;
-  background-color: rgb(212, 190, 233);
+  /* background-color: rgb(212, 190, 233); */
   /* background-color: khaki; */
 }
 #mapTiming h1 {
@@ -317,10 +505,11 @@ export default {
   float: left;
   width: 50%;
   height: 100%;
+  box-shadow: 0 5px 10px -7px;
 }
 .animate img {
   position: absolute;
-  bottom: 0px;
+  bottom: 5px;
   border-top: 1px solid #d8d8d8;
   left: 50%;
   transform: translate3d(-50%,0,0);

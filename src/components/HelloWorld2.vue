@@ -3,10 +3,11 @@
     <div id="header_header" />
     <el-header>
     <!-- <span id="web_title">Tencent VS Alibaba</span> -->
-      <svg-icon name="ind_2" width="24"></svg-icon>
+      <!-- <svg-icon name="ind_2" width="24"></svg-icon> -->
+      <a href="#"><img src="@static/icon/title.png" style="height:40px"/></a>
       <el-menu background-color="#dbebf8" class="el-menu-demo" mode="horizontal" style="height: 55px; display:inline-block;">
-        <el-menu-item index="0" id="web_title">Tencent VS Alibaba
-        </el-menu-item>
+        <!-- <el-menu-item index="0" id="web_title">Tencent VS Alibaba
+        </el-menu-item> -->
         <el-menu-item index="1"><a href="#analysis">行业数据对比</a>
         </el-menu-item>
         <el-menu-item index="2"><a href="#MapGrid">海外投资版图</a>

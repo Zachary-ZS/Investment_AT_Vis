@@ -21,15 +21,16 @@
       </div>
       <div id="stack_t"></div>
       <div id="note_null">
-        <p style="margin:-6px;margin-bottom:-6px;font-size:6px;" v-for="(item,key) in types" :key="key">
-          <span :style="`border:1px solid #000;background-color:${color_list_t[key]}`">&emsp;</span><span style="display:inline-block;height:18px;width:70px">{{item}}</span>
-          <span :style="`border:1px solid #000;background-color:${color_list_a[key]}`">&emsp;</span>
-        </p>
-        <el-radio-group style="margin:10px" v-model="range" @change="flushrange()">
+        <el-radio-group style="margin-bottom:10px" v-model="range" @change="flushrange()">
           <el-radio-button label="china">国内</el-radio-button>
           <el-radio-button label="all">全部</el-radio-button>
           <el-radio-button label="abroad">国外</el-radio-button>
-        </el-radio-group>       
+        </el-radio-group>
+        <p style="margin:0px;font-size:6px;" v-for="(item,key) in types" :key="key">
+          <span :style="`border:1px solid #000;background-color:${color_list_t[key]}`">&emsp;</span><span style="display:inline-block;width:70px">{{item}}</span>
+          <span :style="`border:1px solid #000;background-color:${color_list_a[key]}`">&emsp;</span>
+        </p>
+        
         
       </div>
       <div id="stack_a"></div>
@@ -47,8 +48,8 @@ export default {
   data() {
     return {
       svg: [null, null, null, null],
-      svgWidth: 500,    //////////////////////////////////600
-      svgHeight: 620,  ////////////////////////////////////////550
+      svgWidth: 600,
+      svgHeight: 560,
       range: "all",
       years: ["before 2008", "2008", "2009", "2010", "2011", '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020'],
       industries: ["文娱传媒", "游戏", "企业服务", "金融/支付", "社交社区", "电子商务", "医疗健康/生物医药", "教育培训", "直播/视频", "汽车交通", "生活服务", "工具软件", "人工智能", "电信/通信", "旅游/OTA", "科创/技术研发", "食品/商贸零售", "硬件/生产制造", "物流运输", "房产家居", "AR/VR", "其他"],
@@ -56,11 +57,11 @@ export default {
       ind_order: null,
       ordered_ind: [],
       orderby: -1,
-      orders: [ //////////////////更新
-        [0,1,2,3,4,5,6,7,8,9,10,11,21,12,13,14,15,16,17,18,19,20],
-        [19,9,13,10,5,18,8,3,16,14,1,0,12,7,15,6,17,4,2,21,11,20],
-        [2,5,0,9,18,16,11,3,10,4,12,13,19,20,6,8,14,15,21,1,7,17],
-        [13,10,6,8,16,9,5,19,7,0,18,3,12,2,21,4,20,11,1,17,14,15]        
+      orders: [
+        [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,0],
+        [1,0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21],
+        [1,2,3,4,0,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21],
+        [1,2,0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]        
       ],
       data_a: [],
       data_t: [],
@@ -89,7 +90,7 @@ export default {
         .attr("preserveAspectRatio", "none")
 
       // alibaba scatter, range changed
-      let range_x = idx?[405, 0]:[0, 405]   ///////////[505, 0]:[0, 505] 
+      let range_x = idx?[505, 0]:[0, 505]
       
       let x = d3
         .scalePoint()
@@ -105,7 +106,7 @@ export default {
         .attr("class", "axis")
         .attr("transform", `translate(${(idx?14:78)}, ${this.svgHeight-4*this.industries.length+6})`)
         .call(axis_x)
-        .attr('font-size', '0.5rem') //年份标签
+        .attr('font-size', '0.5rem')
       axis.select('path').remove()
       axis.selectAll('line').remove()
 
@@ -132,10 +133,10 @@ export default {
       .append("line")
       .attr('class', 'yline')
       .attr('y1', (d,i)=>{
-        return (this.svgHeight/this.industries.length-4) * i+22; //画网格横线
+        return (this.svgHeight/this.industries.length-4) * i+22;
       })
       .attr('y2', (d,i)=>{
-        return (this.svgHeight/this.industries.length-4) * i+22; 
+        return (this.svgHeight/this.industries.length-4) * i+22;
       })
       .attr('x1', idx?0:76)
       .attr('x2', this.svgWidth-4*this.years.length+(idx?-24:70))
@@ -176,7 +177,7 @@ export default {
           if (isNaN(vl))
             return "#eee";
           if (idx)
-            return d3.rgb(255,55+vl*200/255,vl); ///////////////////////////////////
+            return d3.rgb(255,vl,255);
           return d3.rgb(vl,vl,255)
         })
         .attr("cx", (d,i)=>{
@@ -185,10 +186,8 @@ export default {
           return (this.svgWidth/this.years.length-4)*(d["year"]-2007)+(idx?14:78);
           
         })
-        .attr("cy", (d,i)=>{   //////////////////更新
-          if (this.ind_order == null) 
-            return (this.svgHeight/this.industries.length-4)*d["industry"]+22; 
-          return (this.svgHeight/this.industries.length-4)*this.ind_order.indexOf(d["industry"])+22;
+        .attr("cy", (d,i)=>{
+          return (this.svgHeight/this.industries.length-4)*d["industry"]+22;
         })
         
         .attr("stroke", "black")
@@ -243,8 +242,8 @@ export default {
       let data = idx?this.amount_a:this.amount_t;
       var svgid=(idx? "#stack_a":"#stack_t")
       let div = d3.select(svgid);
-      let svgWidth = 500;  //////////////////////////////////////////
-      let svgHeight = 60;  ///////////////
+      let svgWidth = 600;
+      let svgHeight = 120;
       // console.log(data)
       let cl = idx?this.color_list_a:this.color_list_t;
       cl.splice(0, cl.length)
@@ -267,12 +266,12 @@ export default {
       (data)
 
 
-      let range_x = idx?[394, 14]:[110, 490]    ////////////////////////[483, 14]:[116, 585] 改了没用？
+      let range_x = idx?[483, 14]:[116, 585]
       let x = d3.scaleTime()
         .domain(d3.extent(data, d => d.year))
         .range(range_x)
       let y = d3.scaleLinear()
-        .range([0, svgHeight]) 
+        .range([0, svgHeight])
       let area = d3.area()
         .x(d => x(d.data.year))
         .y0(d => y(d[0]))
@@ -304,8 +303,8 @@ export default {
       }
       let vl = colorscale(amount)
       if (idx)
-        return d3.rgb(255,55+vl*200/255,vl);  //////////////////////////
-      return d3.rgb(vl,vl,255); 
+        return d3.rgb(255,vl,255);
+      return d3.rgb(vl,vl,255);
     },
     flushrange() {
       // if (range == this.range) 
@@ -419,17 +418,17 @@ export default {
 <style scoped>
 #analysis {
   display: inline-grid;
-  height: 700px;
+  height: 680px;
   width: 100%;
   text-align: center;
-  grid-template-columns: 45% 10% 45%;
-  grid-template-rows: 570px 100px;
+  grid-template-columns: 45% 9% 46%;
+  grid-template-rows: 510px 140px;
 }
-.axis path {
+/* .axis path {
   visibility: hidden;
   color: aqua;
   fill: none;
-}
+} */
 #scatter_t {
     /* width: 640px; */
     padding-top: 10px;
@@ -445,7 +444,7 @@ export default {
   padding-top: 17px;
 }
 #industry_note p {
-  margin: 8.3px;
+  margin: 5.6px;
   overflow: hidden;
   /* text-overflow:ellipsis; */
   white-space: nowrap;
@@ -456,7 +455,7 @@ export default {
     text-align: left;
 }
 #stack_a {
-  text-align: left; 
+  text-align: left;
 }
 /deep/.el-radio-group .el-radio-button .el-radio-button__inner {
   padding: 6px;
