@@ -12,6 +12,7 @@
     <div id="invest_animation">
       <div class="animate" id="animate_t">
         <img src="@static/icon/company/tencent.png" :height="`${height_t}px`"/>
+        <svg-icon v-for="i in Array(22).fill().map((_,i)=>i+1)" :key="i" :name="`ind_${i}`" :width="'30'" ></svg-icon>
       </div>
       <div class="animate" id="animate_a">
         <img src="@static/icon/company/alibaba.png" :height="`${height_a}px`"/>
@@ -43,7 +44,7 @@ export default {
       month: 1,
       moon: 1,
       mix_color: "lightgreen",
-      single_color: ["lightblue", "lightyellow"],
+      single_color: ["lightblue", "khaki"],
       slider_marks: {
         1: "2008年",
         25: "2010年",
@@ -152,6 +153,7 @@ export default {
     },
     timeTicking() {
       this.drawInvest()
+      this.drawHome()
       if (this.year != 2020 || this.month != 12) {
         this.timeout = setTimeout(()=>{
           if (this.month<12)
@@ -223,6 +225,7 @@ export default {
               newsvg.attr("width", this.large_iconsize)
                 .attr("height", this.large_iconsize)
                 .transition()
+                .delay(800)
                 .duration(500)
                 .attr("width", 0)
                 .attr("height", 0)
@@ -237,6 +240,12 @@ export default {
       })
       // } else {
         
+    },
+    drawHome(mode) {
+      // mode = now or before
+      mode = typeof(mode) == 'undefined' ? "now" : mode;
+      this.height_a = this.logscale(parseFloat(this.val[1][this.moon-1].marketvalue))
+      this.height_t = this.logscale(parseFloat(this.val[0][this.moon-1].marketvalue))
     },
     // Slider Functions
     getYM(moon) {
@@ -265,7 +274,7 @@ export default {
         return d;
       }).then(data => {
         this.val[1]=data
-        console.log(parseFloat(this.val[1][0].marketvalue))
+        // console.log(parseFloat(this.val[1][0].marketvalue))
         this.height_a = this.logscale(parseFloat(this.val[1][0].marketvalue))
         this.height_t = this.logscale(parseFloat(this.val[0][0].marketvalue))
       })
@@ -277,11 +286,11 @@ export default {
 <style scoped>
 #MapGrid {
   display: inline-grid;
-  height: 880px;
+  height: 930px;
   width: 100%;
   text-align: center;
   grid-template-columns: 1000px 400px;
-  grid-template-rows: 420px 60px 400px;
+  grid-template-rows: 420px 60px 450px;
 }
 #slider {
   grid-column-start: 1;
@@ -296,16 +305,25 @@ export default {
   grid-column-end: 3;
   grid-row-start: 3;
   background-color: rgb(212, 190, 233);
+  /* background-color: khaki; */
 }
 #mapTiming h1 {
   font-weight: normal;
 }
 .animate {
   text-align:center;
+  position: relative;
   vertical-align: bottom;
-  display: inline-block;
+  float: left;
   width: 50%;
   height: 100%;
+}
+.animate img {
+  position: absolute;
+  bottom: 0px;
+  border-top: 1px solid #d8d8d8;
+  left: 50%;
+  transform: translate3d(-50%,0,0);
 }
 </style>
 

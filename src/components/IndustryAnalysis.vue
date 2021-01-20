@@ -424,11 +424,11 @@ export default {
   grid-template-columns: 45% 9% 46%;
   grid-template-rows: 510px 140px;
 }
-.axis path {
+/* .axis path {
   visibility: hidden;
   color: aqua;
   fill: none;
-}
+} */
 #scatter_t {
     /* width: 640px; */
     padding-top: 10px;

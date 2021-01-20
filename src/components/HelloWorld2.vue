@@ -3,7 +3,7 @@
     <div id="header_header" />
     <el-header>
     <!-- <span id="web_title">Tencent VS Alibaba</span> -->
-      <!-- <svg-icon name="ind_2" color="red" width="24"></svg-icon> -->
+      <svg-icon name="ind_2" width="24"></svg-icon>
       <el-menu background-color="#dbebf8" class="el-menu-demo" mode="horizontal" style="height: 55px; display:inline-block;">
         <el-menu-item index="0" id="web_title">Tencent VS Alibaba
         </el-menu-item>
