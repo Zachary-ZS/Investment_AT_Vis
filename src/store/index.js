@@ -7,12 +7,21 @@ Vue.use(Vuex)
 
 const user = {
     state: {
-        mail: 'test@gmail.com'
+        mail: 'test@gmail.com',
+        indus: -1
     },
 
     mutations: {
         SET_MAIL: (state, mail) => {
             state.mail = mail;
+        },
+        SET_IND: (state, ind) => {
+            state.indus = ind;
+        }
+    },
+    actions: {
+        setIndustry({ commit }, ind) {
+            commit("SET_IND", ind)
         }
     }
 

@@ -8,7 +8,7 @@
       <el-menu background-color="#dbebf8" class="el-menu-demo" mode="horizontal" style="height: 55px; display:inline-block;">
         <!-- <el-menu-item index="0" id="web_title">Tencent VS Alibaba
         </el-menu-item> -->
-        <el-menu-item index="1"><a href="#analysis">行业数据对比</a>
+        <el-menu-item index="1"><a href="#invest_analysis">行业数据对比</a>
         </el-menu-item>
         <el-menu-item index="2"><a href="#MapGrid">海外投资版图</a>
         </el-menu-item>
@@ -17,53 +17,13 @@
       </el-menu>    
     </el-header>
     <el-main>
-      <h1> 腾讯投资版图概览 </h1>
-      <h2> （与阿里对比） </h2>
-      <ul>
-        <li>
-          <a
-            href="https://vuejs.org"
-            target="_blank"
-          >
-            Core Docs
-          </a>
-        </li>
-        <li>
-          <a
-            href="https://forum.vuejs.org"
-            target="_blank"
-          >
-            Forum
-          </a>
-        </li>
-        <li>
-          <a
-            href="https://chat.vuejs.org"
-            target="_blank"
-          >
-            Community Chat
-          </a>
-        </li>
-        <li>
-          <a
-            href="https://twitter.com/vuejs"
-            target="_blank"
-          >
-            Twitter
-          </a>
-        </li>
-        <br>
-        <li>
-          <a
-            href="http://vuejs-templates.github.io/webpack/"
-            target="_blank"
-          >
-            Docs for This Template
-          </a>
-        </li>
-      </ul>
-      
-      <el-button>{{ this.mail }}</el-button>
+      <el-carousel type="card" trigger="click" height="400px">
+      <el-carousel-item v-for="item in 8" :key="item">
+        <img :src="`../static/intro/${item}.png`" style="border: 2px solid #000; width:99%;vertical-align:center;" />
+      </el-carousel-item>
+    </el-carousel>
+
+
     </el-main>
     <el-main>
       <h1 style="margin: 10px;">腾讯与阿里投资行业对比</h1>
@@ -87,6 +47,7 @@ import scatter from './scatterplot'
 import IndustryAnalysis from './IndustryAnalysis'
 import SmallMultiple from './SmallMultiple'
 import InvestMap from './InvestMap'
+// import banner from './banner'
 import '@/assets/svg/'
 export default {
   name: 'HelloWorld',
@@ -154,6 +115,19 @@ a {
   color: #42b983;
   text-decoration: none;
 }
+
+.el-carousel__item {
+  font-size: 14px;
+  opacity: 0.25;
+  line-height: 200px;
+  /* background-color: #d3dce6; */
+  margin: 0;
+}
+.el-carousel__item.is-active {
+  opacity: 1;
+}
+
+
 </style>
 
 <!--

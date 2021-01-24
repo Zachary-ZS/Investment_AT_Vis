@@ -1,6 +1,8 @@
 <template>
   <div id="MapGrid">
-    <div id="investmap"></div>
+    <div id="investmap">
+      <div class="tooltip"></div>
+    </div>
     <div id="mapTiming">
       <h1>腾讯与阿里海外投资版图对比</h1>
       <h2>{{year}} 年 {{month}} 月</h2>
@@ -96,12 +98,13 @@ export default {
       // let color = d3.scale
 
       let svg = this.svg
+      let _this = this
       svg.append("g")
         .selectAll("path")
         .data(this.mapdata.features)
         .join("path")
           .attr("fill", d=>{
-            if (d.properties.name == "China")
+            if (d.properties.name == "China"||d.properties.name == "Taiwan")
               return "red";
             return "#e0e0e0";
           })
@@ -113,7 +116,57 @@ export default {
             // let bd = d3.select(this).node().getBoundingClientRect()
             // let bdf = svg.node().getBoundingClientRect()
             // console.log(bd.x-bdf.x, bd.y-bdf.y)
+            let tooltip = d3.select("#investmap").select(".tooltip")
+            let cty = d.properties.name
+            // console.log(d.id)
+            let ins = ''
+            if (_this.country_inds[0][parseInt(d.id)].length+_this.country_inds[1][parseInt(d.id)].length==0)
+              return;
+            let dlist = _this.country_inds[0][parseInt(d.id)]
+            if (dlist.length) {
+            ins += `在 ${cty}, Tencent 投资行业有:<br />`
+            // console.log(_this.country_inds[0][d.id])
+            // console.log(_this.country_inds[0][d.id])
+            // console.log(_this.country_inds[1][d.id])
+            // console.log(parseInt(d.id))
+            // console.log(_this.country_inds[0])
+            dlist.sort()
+            var dd = [dlist[0]]
+            for (var i=1;i<dlist.length;i++) {
+              if (dlist[i]!=dlist[i-1])
+                dd.push(dlist[i])
+            }
+            console.log(dd)
+            dd.forEach(d=>{
+              ins += _this.industries[parseInt(d)-1] + " "
+            })
+            }
+
+            dlist = _this.country_inds[1][parseInt(d.id)]
+            if (dlist.length) {
+            ins += `<br />在 ${cty}, Alibaba 投资行业有:<br />`
+            dlist.sort()
+            var dd = [dlist[0]]
+            for (var i=1;i<dlist.length;i++) {
+              if (dlist[i]!=dlist[i-1])
+                dd.push(dlist[i])
+            }
+            dd.forEach(d=>{
+              ins += _this.industries[parseInt(d)-1] + " "
+            })
+            }
+            tooltip
+              .html(ins)
+              .style("left", e.layerX + 100 + "px")
+              .style("top", e.layerY + 20 +  "px")
+              .style("visibility", "visible");
           })
+          .on("mouseout", function(d) {
+          
+          let div = d3.select("#investmap")
+          let tooltip = div.select(".tooltip")
+          tooltip.style("visibility", "hidden")
+        })
         .append("title")
           .text(d=>d.properties.name)
 
@@ -135,7 +188,7 @@ export default {
     
     timeSetTicking(mode, goon) {
       mode = typeof(mode) == 'undefined' ? "reset" : mode;
-      console.log(mode)
+      // console.log(mode)
       if (mode=="reset") {
         this.year=2008
         this.month=1
@@ -144,7 +197,7 @@ export default {
       this.svg.selectAll("#iconlayer > *").remove()
       this.svg.selectAll("path")
         .attr("fill", d=>{
-            if (d.properties.name == "China")
+            if (d.properties.name == "China" || d.properties.name == "Taiwan")
               return "red";
             return "#e0e0e0";
           })
@@ -221,7 +274,7 @@ export default {
             let path_c = this.svg.select("#"+d["region"].replace(/\s*/g,""))
 
             let idxx = (d["投资方"]=="阿里巴巴")?1:0
-            console.log(path_c.data()[0].id)
+            // console.log(path_c.data()[0].id)
             // console.log(this.country_inds[idxx])
             let coutryind_invested_byAT = this.country_inds[idxx][parseInt(path_c.data()[0].id)]
             let hasIdxx = (this.country_inds[idxx][parseInt(path_c.data()[0].id)].length!=0)
@@ -229,18 +282,20 @@ export default {
             if (this.country_inds[idxx][parseInt(path_c.data()[0].id)].indexOf(parseInt(d["行业"]))==-1) {
               this.country_inds[idxx][parseInt(path_c.data()[0].id)].push(d["行业"])
             }
+            if (path_c.data()[0].properties.name != "Taiwan") {
             if (hasOther && (!hasIdxx)) {
               path_c
                 .transition()
                 .duration(500)
                 .attr("fill", this.mix_color)
             } else if ((!hasOther)&&(!hasIdxx)) {
-              console.log(this.single_color[idxx])
-              console.log(this.country_inds)
+              // console.log(this.single_color[idxx])
+              // console.log(this.country_inds)
               path_c
                 .transition()
                 .duration(500)
                 .attr("fill", this.single_color[idxx])
+            }
             }
 
             let bd = path_c.node().getBoundingClientRect()
@@ -302,7 +357,7 @@ export default {
           let g = d3.select(svgid).select("#indicon")
           let svgnode = g.select(`.ind_${d["industry"]}`)
           let tmpsize = this.logscale2(d["num"])
-          console.log(tmpsize)
+          // console.log(tmpsize)
           svgnode
             .transition()
             .duration(400)
@@ -406,7 +461,7 @@ export default {
     },
     // Slider Functions
     getYM(moon) {
-      console.log(moon)
+      // console.log(moon)
       let year = Math.floor((moon-1)/12) + 2008
       let month = moon % 12 || 12
       this.year = year
@@ -462,7 +517,7 @@ export default {
           this.data_processing(data)
           this.drawHomeGraph(0)
           this.drawHomeGraph(1)
-          console.log("tmp")
+          // console.log("tmp")
         })
       })
     })
@@ -513,6 +568,12 @@ export default {
   border-top: 1px solid #d8d8d8;
   left: 50%;
   transform: translate3d(-50%,0,0);
+}
+
+.tooltip {
+    position: absolute;
+    width: 200px;
+    padding: 16px;
 }
 </style>
 

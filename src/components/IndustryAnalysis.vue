@@ -1,5 +1,5 @@
 <template>
-<div style="text-align:center;">
+<div style="text-align:center;" id="invest_analysis">
   <div>
     <el-radio-group v-model="orderby" @change="ind_order=orderby==-1?null:orders[orderby]; get_ordered_industry();drawPoints(0);drawPoints(1);">
       <el-radio-button label=0>腾讯投资公司数</el-radio-button>
@@ -14,7 +14,7 @@
         <div class="tooltip"></div>
       </div>
       <transition-group tag="div" id="industry_note">
-          <p v-for="item in ordered_ind" :key="item">{{item}}</p>
+          <p v-for="item in ordered_ind" @dblclick="clickind(item)" :key="item">{{item}}</p>
       </transition-group>
       <div id="scatter_a">
         <div class="tooltip"></div>
@@ -72,7 +72,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["mail"]),
+    ...mapGetters(["mail", "indus"]),
   },
   methods: {
     
@@ -206,7 +206,7 @@ export default {
           
           tooltip
             .html(instruction1+instruction2)
-            .style("left", e.layerX + 10+ (1-idx)*10 + "px")
+            .style("left", e.layerX + 10+ (1-idx)*80 + "px")
             .style("top", e.layerY + 20 +  "px")
             .style("visibility", "visible");
         })
@@ -391,6 +391,15 @@ export default {
           min = v;
       });
       return [min, max];
+    },
+    clickind(indname) {
+      var idx = this.industries.indexOf(indname) + 1
+      this.$store.dispatch("setIndustry", idx)
+      // this.$router.push("/Mapgrid")
+      let pto = document.getElementById("smm")
+      pto.scrollIntoView()
+      console.log(idx)
+      console.log(this.indus)
     }
 
   },
@@ -419,7 +428,7 @@ export default {
 <style scoped>
 #analysis {
   display: inline-grid;
-  height: 700px;
+  height: 750px;
   width: 100%;
   text-align: center;
   grid-template-columns: 45% 10% 45%;
